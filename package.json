@@ -1,0 +1,30 @@
+{
+  "version": "0.0.1",
+  "name": "json--",
+  "description": "A streaming JSON parser that sometimes might be faster than v8 JSON.parse",
+  "keywords": [
+    "JSON"
+  ],
+  "homepage": "https://github.com/alFReD-NSH/JSON--",
+  "author": "Farid Neshat <FaridN_SOAD@yahoo.com> (alFReD NSH)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alFReD-NSH/JSON--"
+  },
+  "bugs": {
+    "url": "http://github.com/alFReD-NSH/JSON--/issues"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "main": "./index.js",
+  "engines": {
+    "node": ">=0.4"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/alFReD-NSH/JSON--/raw/master/LICENSE"
+    }
+  ]
+}
