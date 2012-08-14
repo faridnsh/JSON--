@@ -67,6 +67,7 @@ function Parser(path) {
   this.value            = undefined;
   // string data
   this.string           = undefined;
+  this.sStart           = undefined;
   // unicode escapes
   this.unicode          = undefined;
 
@@ -86,6 +87,14 @@ var proto = Parser.prototype;
 proto.charError = function (buffer, i) {
   this.onError(new Error("Unexpected " + JSON.stringify(String.fromCharCode(buffer[i])) + " at position " + i + " in state " + toknam(this.tState)));
 };
+proto.startString = function (i) {
+  this.tState = STRING1;
+  this.sStart = i + 1;
+}
+proto.endString = function (buffer, i) {
+  this.string += buffer.toString('utf8', this.sStart, i - 1);
+}
+
 proto.onError = function (err) { throw err; };
 proto.write = function (buffer) {
   if (typeof buffer === "string") buffer = new Buffer(buffer);
@@ -133,7 +142,7 @@ proto.write = function (buffer) {
       case 0x74: this.tState = TRUE1; break; // t
       case 0x66: this.tState = FALSE1; break; // f
       case 0x6e: this.tState = NULL1; break; // n
-      case 0x22: this.string = ""; this.tState = STRING1; break; // "
+      case 0x22: this.string = ""; this.startString(i); break; // "
       case 0x2d: this.negative = true; this.tState = NUMBER1; break; // -
       case 0x30: this.magnatude = 0; this.tState = NUMBER2; break; // 0
       default:
@@ -148,26 +157,26 @@ proto.write = function (buffer) {
     case STRING1: // After open quote
       n = buffer[i];
       // TODO: Handle native utf8 characters, this code assumes ASCII input
+      // Not sure this Still applies
       if (n === 0x22) { // We just finished the string
         this.tState = START;
+        this.endString(buffer, i);
         this.onToken(STRING, this.string);
         this.string = undefined;
       }
-      else if (n === 0x5c) { this.tState = STRING2; }
-      else if (n >= 0x20) { this.string += String.fromCharCode(n); }
-      else { this.charError(buffer, i); }
+      else if (n === 0x5c) { this.tState = STRING2; this.endString(buffer, i); }
+      else if (n < 0x20) { this.charError(buffer, i); }
       break;
     case STRING2: // After backslash
-      n = buffer[i];
-      switch (n) {
-      case 0x22: this.string += "\""; this.tState = STRING1; break;
-      case 0x5c: this.string += "\\"; this.tState = STRING1; break;
-      case 0x2f: this.string += "\/"; this.tState = STRING1; break;
-      case 0x62: this.string += "\b"; this.tState = STRING1; break;
-      case 0x66: this.string += "\f"; this.tState = STRING1; break;
-      case 0x6e: this.string += "\n"; this.tState = STRING1; break;
-      case 0x72: this.string += "\r"; this.tState = STRING1; break;
-      case 0x74: this.string += "\t"; this.tState = STRING1; break;
+      switch (buffer[i]) {
+      case 0x22: this.string += "\"";this.startString(i); break;
+      case 0x5c: this.string += "\\";this.startString(i); break;
+      case 0x2f: this.string += "\/";this.startString(i); break;
+      case 0x62: this.string += "\b";this.startString(i); break;
+      case 0x66: this.string += "\f";this.startString(i); break;
+      case 0x6e: this.string += "\n";this.startString(i); break;
+      case 0x72: this.string += "\r";this.startString(i); break;
+      case 0x74: this.string += "\t";this.startString(i); break;
       case 0x75: this.unicode = ""; this.tState = STRING3; break;
       default: this.charError(buffer, i); break;
       }
@@ -340,6 +349,11 @@ proto.write = function (buffer) {
       break;
     }
   }
+
+  if (this.tState === STRING1) {
+    this.endString(buffer, i);
+    this.startString(0);
+  }
 };
 
 proto.parseError = function (token, value) {
@@ -355,7 +369,7 @@ proto.parseError = function (token, value) {
 proto.onError = function (err) { throw err; };
 proto.push = function () {
   this.place++;
-  this.stack.push({value: this.value, key: this.key, mode: this.mode});
+  this.stack.push({ value: this.value, key: this.key, mode: this.mode });
 };
 proto.pop = function () {
   var value = this.value;
