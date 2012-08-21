@@ -2,6 +2,10 @@
 
 This is a streaminig json parser, that only parsers what you tell it, based on [dominictarr's JSONStream](https://github.com/dominictarr/JSONStream) idea and [creationix's jsonparse](https://github.com/creationix/jsonparse/) code(mostly his, didn't change much).
 
+## Install
+
+    npm install json--
+
 ## How to use?
 
     var JSONParser = require('json--'),
