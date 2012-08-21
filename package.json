@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.0.2",
   "name": "json--",
   "description": "A streaming JSON parser that sometimes might be faster than v8 JSON.parse",
   "keywords": [
